@@ -54,7 +54,8 @@ func createEmu(eip, esp uint32) *emulator {
 
 }
 
-func dumpRegisters(emu *emulator) {
+// 汎用レジスタとプログラムカウンタの値を出力
+func (emu *emulator) dumpRegisters() {
 
 	for i, s := range registersName {
 		fmt.Printf("%s = %08x\n", s, emu.registers[i])
@@ -62,10 +63,8 @@ func dumpRegisters(emu *emulator) {
 	fmt.Printf("EIP = %08x\n", emu.eip)
 }
 
-// エミュレータを破棄する関数（メモリの解放）は要らないかな？？
-
 func main() {
 
 	emu := createEmu(1, 1)
-	dumpRegisters(emu)
+	emu.dumpRegisters()
 }
