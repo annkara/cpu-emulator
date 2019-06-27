@@ -63,6 +63,11 @@ func (emu *emulator) dumpRegisters() {
 	fmt.Printf("EIP = %08x\n", emu.eip)
 }
 
+// エミュレータのメモリアドレス + index の領域にアクセスする
+// が、現状エミュレータのメモリ空間を実現できていない。
+func (emu *emulator) getCode8(index int) uint32 {
+}
+
 func main() {
 
 	emu := createEmu(1, 1)
