@@ -35,10 +35,10 @@ type emulator struct {
 	// EFLAGSレジスタ
 	eflgas uint32
 
-	// メモリ
-	memory *uint8
+	// 8bit * memorySize のメモリ空間
+	memory [memorySize]uint8
 
-	// プログラムカウンタ
+	// プログラムカウンタ 32bit
 	eip uint32
 }
 
@@ -61,11 +61,6 @@ func (emu *emulator) dumpRegisters() {
 		fmt.Printf("%s = %08x\n", s, emu.registers[i])
 	}
 	fmt.Printf("EIP = %08x\n", emu.eip)
-}
-
-// エミュレータのメモリアドレス + index の領域にアクセスする
-// が、現状エミュレータのメモリ空間を実現できていない。
-func (emu *emulator) getCode8(index int) uint32 {
 }
 
 func main() {
