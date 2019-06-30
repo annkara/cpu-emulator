@@ -99,11 +99,18 @@ func shortJump(emu *emulator) {
 	emu.eip += uint32(diff + 2)
 }
 
+func nearJump(emu *emulator) {
+
+	diff := getCode32(emu, 1)
+	emu.eip += (diff + 5)
+}
+
 // 関数テーブルの初期化
 func initInstructions() {
 	for i := 0; i < 8; i++ {
 		instructions[0xB8+i] = movR32Imm32
 	}
+	instructions[0xE9] = nearJump
 	instructions[0xEB] = shortJump
 }
 
@@ -114,8 +121,8 @@ func main() {
 		return
 	}
 
-	// EIPが0、ESPが0x7c00の状態のエミュレータを作る
-	emu := createEmu(0x0000, 0x7c00)
+	// EIP、ESPが0x7c00の状態のエミュレータを作る
+	emu := createEmu(0x7c00, 0x7c00)
 
 	// 機械語ファイルを読み込んで、エミュレータのメモリ上に格納する
 	file, err := os.Open(os.Args[1])
@@ -132,7 +139,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	copy(emu.memory[:count], data[:count])
+	copy(emu.memory[0x7c00:0x7c00+count], data[:count])
 
 	initInstructions()
 
