@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"fmt"
 	"log"
 	"os"
@@ -69,12 +70,37 @@ func (emu *emulator) dumpRegisters() {
 	fmt.Printf("EIP = %08x\n", emu.eip)
 }
 
+func getCode8(emu *emulator, index uint32) uint8 {
+	return emu.memory[emu.eip+index]
+}
+
+func getSignCode8(emu *emulator, index uint32) int8 {
+	return int8(emu.memory[emu.eip+index])
+}
+
+func getCode32(emu *emulator, index uint32) uint32 {
+
+	var i uint
+	ret := []uint8{0, 00, 0, 0}
+	for i = 0; i < 4; i++ {
+		ret[i] = getCode8(emu, index+1)
+	}
+	return binary.LittleEndian.Uint32(ret)
+}
+
 func movR32Imm32(emu *emulator) {
+
+	reg := getCode8(emu, 0) - 0xB8
+	value := getCode32(emu, 1)
+	emu.registers[reg] = value
+	emu.eip += 5
 
 }
 
 func shortJump(emu *emulator) {
 
+	diff := getSignCode8(emu, 1)
+	emu.eip += uint32(diff + 2)
 }
 
 // 関数テーブルの初期化
@@ -94,7 +120,6 @@ func main() {
 
 	// EIPが0、ESPが0x7c00の状態のエミュレータを作る
 	emu := createEmu(0x0000, 0x7c00)
-	emu.dumpRegisters()
 
 	// 機械語ファイルを読み込んで、エミュレータのメモリ上に格納する
 	file, err := os.Open(os.Args[1])
@@ -111,8 +136,27 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("read %d bytes: %q\n", count, data[:count])
 	copy(emu.memory[:count], data[:count])
 
 	initInstructions()
+
+	for emu.eip < memorySize {
+		code := getCode8(emu, 0)
+
+		fmt.Printf("EIP = %X, Code = %02X\n", emu.eip, code)
+
+		if instructions[code] == nil {
+			fmt.Printf("\n\nNot Implemented: %x\n", code)
+			break
+		}
+
+		instructions[code](emu)
+
+		if emu.eip == 0x00 {
+			println("\n\nend of program.\n\n")
+			break
+		}
+	}
+	emu.dumpRegisters()
+	return
 }
