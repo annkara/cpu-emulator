@@ -80,11 +80,7 @@ func getSignCode8(emu *emulator, index uint32) int8 {
 
 func getCode32(emu *emulator, index uint32) uint32 {
 
-	var i uint
-	ret := []uint8{0, 00, 0, 0}
-	for i = 0; i < 4; i++ {
-		ret[i] = getCode8(emu, index+1)
-	}
+	ret := emu.memory[emu.eip+index:]
 	return binary.LittleEndian.Uint32(ret)
 }
 
