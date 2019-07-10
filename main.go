@@ -48,6 +48,7 @@ type emulator struct {
 	eip uint32
 }
 
+// 命令テーブル
 var instructions [256]func(*emulator)
 
 // エミュレータを作成する
@@ -70,15 +71,15 @@ func (emu *emulator) dumpRegisters() {
 	fmt.Printf("EIP = %08x\n", emu.eip)
 }
 
-func getCode8(emu *emulator, index uint32) uint8 {
+func code8(emu *emulator, index uint32) uint8 {
 	return emu.memory[emu.eip+index]
 }
 
-func getSignCode8(emu *emulator, index uint32) int8 {
+func signCode8(emu *emulator, index uint32) int8 {
 	return int8(emu.memory[emu.eip+index])
 }
 
-func getCode32(emu *emulator, index uint32) uint32 {
+func code32(emu *emulator, index uint32) uint32 {
 
 	ret := emu.memory[emu.eip+index:]
 	return binary.LittleEndian.Uint32(ret)
@@ -86,8 +87,8 @@ func getCode32(emu *emulator, index uint32) uint32 {
 
 func movR32Imm32(emu *emulator) {
 
-	reg := getCode8(emu, 0) - 0xB8
-	value := getCode32(emu, 1)
+	reg := code8(emu, 0) - 0xB8
+	value := code32(emu, 1)
 	emu.registers[reg] = value
 	emu.eip += 5
 
@@ -95,13 +96,13 @@ func movR32Imm32(emu *emulator) {
 
 func shortJump(emu *emulator) {
 
-	diff := getSignCode8(emu, 1)
+	diff := signCode8(emu, 1)
 	emu.eip += uint32(diff + 2)
 }
 
 func nearJump(emu *emulator) {
 
-	diff := getCode32(emu, 1)
+	diff := code32(emu, 1)
 	emu.eip += (diff + 5)
 }
 
@@ -129,7 +130,7 @@ func main() {
 	defer file.Close()
 	if err != nil {
 		log.Fatal(err)
-		return
+		os.Exit(1)
 	}
 
 	// 0x200 = 512バイトのスライスを作成し
@@ -138,13 +139,14 @@ func main() {
 	count, err := file.Read(data)
 	if err != nil {
 		log.Fatal(err)
+		os.Exit(1)
 	}
 	copy(emu.memory[0x7c00:0x7c00+count], data[:count])
 
 	initInstructions()
 
 	for emu.eip < memorySize {
-		code := getCode8(emu, 0)
+		code := code8(emu, 0)
 
 		fmt.Printf("EIP = %X, Code = %02X\n", emu.eip, code)
 
